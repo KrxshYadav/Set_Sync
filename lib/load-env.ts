@@ -3,4 +3,5 @@
 // before lib/db reads it. (Next.js loads env itself, so the app doesn't need this.)
 import { config } from "dotenv";
 
-config({ path: ".env.local" });
+// Load whichever env file exists (.env.local takes precedence over .env).
+config({ path: [".env.local", ".env"] });

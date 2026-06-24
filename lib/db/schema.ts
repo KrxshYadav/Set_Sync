@@ -7,6 +7,8 @@ import {
   timestamp,
   pgEnum,
   serial,
+  date,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // ── Enums ─────────────────────────────────────────────────────────────
@@ -19,6 +21,10 @@ export const visibilityEnum = pgEnum("visibility", ["public", "hidden"]);
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   username: text("username").notNull().unique(),
+  fullName: text("full_name"),
+  gender: text("gender"), // male | female | other | undisclosed
+  dob: date("dob"), // date of birth; age is computed from this
+  avatarUrl: text("avatar_url"),
   country: text("country").notNull().default("Unknown"),
   city: text("city"),
   preferredUnit: unitEnum("preferred_unit").notNull().default("kg"),
@@ -61,6 +67,7 @@ export const sets = pgTable("sets", {
   setIndex: integer("set_index").notNull(),
   reps: integer("reps").notNull(),
   weightKg: real("weight_kg").notNull(), // always kilograms
+  done: boolean("done").notNull().default(false), // ticked during a session
 });
 
 // ── friendships (~ nice-to-have) ──────────────────────────────────────

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sets, splitEntries } from "@/lib/db/schema";
 import { createClient } from "@/lib/supabase/server";
@@ -78,5 +78,31 @@ export async function updateSet(
 export async function removeSet(setId: string) {
   await requireUserId();
   await db.delete(sets).where(eq(sets.id, setId));
+  revalidatePath("/split");
+}
+
+// ── Today's session ───────────────────────────────────────────────────
+
+/** Tick / untick a single set during a live workout. */
+export async function toggleSetDone(setId: string, done: boolean) {
+  await requireUserId();
+  await db.update(sets).set({ done }).where(eq(sets.id, setId));
+  revalidatePath("/split");
+}
+
+/** Finish the session: clear all ticks for the given weekday's sets. */
+export async function finishWorkout(weekday: number) {
+  const userId = await requireUserId();
+  const entries = await db
+    .select({ id: splitEntries.id })
+    .from(splitEntries)
+    .where(and(eq(splitEntries.userId, userId), eq(splitEntries.weekday, weekday)));
+  const ids = entries.map((e) => e.id);
+  if (ids.length) {
+    await db
+      .update(sets)
+      .set({ done: false })
+      .where(inArray(sets.splitEntryId, ids));
+  }
   revalidatePath("/split");
 }

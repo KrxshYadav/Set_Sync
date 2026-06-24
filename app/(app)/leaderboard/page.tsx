@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { getMyProfile } from "../actions";
+import { getMyProfile } from "@/lib/get-profile";
 import { getLeaderboard } from "./queries";
 import { LIFTS, type LiftKey } from "@/lib/constants";
 import { formatWeight } from "@/lib/units";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/user-avatar";
 
 type SearchParams = Promise<{ lift?: string; scope?: string }>;
 
@@ -119,14 +120,24 @@ export default async function LeaderboardPage({
                   {r.rank <= 3 ? "🏅" : ""}
                   {r.rank}
                 </span>
-                <span className="truncate font-medium">
-                  @{r.username}
-                  {mine && (
-                    <span className="ml-2 rounded bg-lime-500/20 px-1.5 py-0.5 text-[11px] font-semibold text-lime-700">
-                      you
-                    </span>
-                  )}
-                </span>
+                <Link
+                  href={`/u/${r.username}`}
+                  className="flex min-w-0 items-center gap-2.5"
+                >
+                  <UserAvatar
+                    url={r.avatarUrl}
+                    name={r.fullName || r.username}
+                    className="size-8"
+                  />
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium">@{r.username}</span>
+                    {mine && (
+                      <span className="ml-2 rounded bg-lime-500/20 px-1.5 py-0.5 text-[11px] font-semibold text-lime-700 dark:text-lime-300">
+                        you
+                      </span>
+                    )}
+                  </span>
+                </Link>
                 <span className="hidden truncate text-muted-foreground sm:block">
                   {r.city ? `${r.city}, ` : ""}
                   {r.country}

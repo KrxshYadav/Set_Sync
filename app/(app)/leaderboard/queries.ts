@@ -13,6 +13,8 @@ const COLS = {
 export type LeaderRow = {
   id: string;
   username: string;
+  fullName: string | null;
+  avatarUrl: string | null;
   country: string;
   city: string | null;
   weightKg: number;
@@ -37,6 +39,8 @@ export async function getLeaderboard(
     .select({
       id: profiles.id,
       username: profiles.username,
+      fullName: profiles.fullName,
+      avatarUrl: profiles.avatarUrl,
       country: profiles.country,
       city: profiles.city,
       weightKg: col,

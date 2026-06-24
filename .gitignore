@@ -47,6 +47,11 @@ CLAUDE.md
 CLAUDE.local.md
 .vscode/
 .idea/
+
+# local-only docs (keep private, do not upload)
+README.md
+docs/PLAN.md
+docs/PRD.md
 .mcp.json
 .cursor/
 .cursorrules

@@ -1,4 +1,4 @@
-import { getMyProfile } from "../actions";
+import { getMyProfile } from "@/lib/get-profile";
 import { SettingsForm } from "@/components/settings-form";
 
 export default async function SettingsPage() {

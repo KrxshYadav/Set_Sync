@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Lock } from "lucide-react";
-import { getMyProfile } from "../../actions";
+import { getMyProfile } from "@/lib/get-profile";
 import { getProfileByUsername, getSplitOverview } from "../../search/queries";
-import { LIFTS, WEEKDAYS } from "@/lib/constants";
+import { LIFTS, WEEKDAYS, GENDERS, calcAge } from "@/lib/constants";
 import { formatWeight } from "@/lib/units";
 import { Badge } from "@/components/ui/badge";
 
@@ -53,15 +53,39 @@ export default async function PublicProfilePage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            @{profile.username}
-          </h1>
-          <p className="text-muted-foreground">
-            {profile.city ? `${profile.city}, ` : ""}
-            {profile.country}
-          </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          {profile.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={profile.avatarUrl}
+              alt={profile.username}
+              className="size-16 rounded-full object-cover ring-2 ring-border"
+            />
+          ) : (
+            <div className="flex size-16 items-center justify-center rounded-full bg-secondary text-2xl font-semibold text-muted-foreground">
+              {(profile.fullName || profile.username).charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            {profile.fullName && (
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {profile.fullName}
+              </h1>
+            )}
+            <p className={profile.fullName ? "text-muted-foreground" : "text-2xl font-semibold tracking-tight"}>
+              @{profile.username}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {[
+                profile.city ? `${profile.city}, ${profile.country}` : profile.country,
+                calcAge(profile.dob) != null ? `${calcAge(profile.dob)} yrs` : null,
+                GENDERS.find((g) => g.value === profile.gender)?.label ?? null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
         </div>
         {isSelf && (
           <Link href="/settings" className="text-sm font-medium underline">

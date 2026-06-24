@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { COUNTRIES, type LiftKey } from "@/lib/constants";
+import { COUNTRIES, GENDERS, calcAge, type LiftKey } from "@/lib/constants";
 import { kgToDisplay, displayToKg, type Unit } from "@/lib/units";
 import { updateProfile } from "@/app/(app)/actions";
 import type { Profile } from "@/lib/db/schema";
@@ -27,6 +28,10 @@ export function SettingsForm({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [unit, setUnit] = useState<Unit>(profile.preferredUnit);
   const [saving, setSaving] = useState(false);
+  const [dob, setDob] = useState(profile.dob ?? "");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    profile.avatarUrl,
+  );
   const [prs, setPrs] = useState<PrState>(() => {
     const init = {} as PrState;
     for (const f of LIFT_FIELDS) {
@@ -36,17 +41,16 @@ export function SettingsForm({ profile }: { profile: Profile }) {
     return init;
   });
 
-  // When the unit changes, re-express the typed numbers in the new unit so the
-  // underlying weight stays the same (kg -> kg via the round-trip).
+  const age = calcAge(dob);
+
   function handleUnitChange(next: Unit) {
     if (next === unit) return;
     setPrs((cur) => {
       const out = {} as PrState;
       for (const f of LIFT_FIELDS) {
         const raw = cur[f.key];
-        if (raw === "" || !Number.isFinite(Number(raw))) {
-          out[f.key] = raw;
-        } else {
+        if (raw === "" || !Number.isFinite(Number(raw))) out[f.key] = raw;
+        else {
           const kg = displayToKg(Number(raw), unit);
           out[f.key] = String(kgToDisplay(kg, next));
         }
@@ -56,12 +60,20 @@ export function SettingsForm({ profile }: { profile: Profile }) {
     setUnit(next);
   }
 
+  function handleAvatar(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) setAvatarPreview(URL.createObjectURL(file));
+  }
+
   async function onSubmit(formData: FormData) {
     setSaving(true);
     try {
-      await updateProfile(formData);
-      toast.success("Profile saved");
-      router.refresh();
+      const res = await updateProfile(formData);
+      if (res?.error) toast.error(res.error);
+      else {
+        toast.success("Profile saved");
+        router.refresh();
+      }
     } catch {
       toast.error("Could not save. Try again.");
     } finally {
@@ -71,15 +83,104 @@ export function SettingsForm({ profile }: { profile: Profile }) {
 
   return (
     <form action={onSubmit} className="space-y-8">
+      {/* Avatar */}
+      <section className="flex items-center gap-4">
+        <div className="relative">
+          {avatarPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarPreview}
+              alt="avatar"
+              className="size-20 rounded-full object-cover ring-2 ring-border"
+            />
+          ) : (
+            <div className="flex size-20 items-center justify-center rounded-full bg-secondary text-2xl font-semibold text-muted-foreground">
+              {(profile.fullName || profile.username).charAt(0).toUpperCase()}
+            </div>
+          )}
+          <label
+            htmlFor="avatar"
+            className="absolute -bottom-1 -right-1 flex size-7 cursor-pointer items-center justify-center rounded-full bg-foreground text-background"
+          >
+            <Camera className="size-3.5" />
+            <input
+              id="avatar"
+              name="avatar"
+              type="file"
+              accept="image/*"
+              onChange={handleAvatar}
+              className="sr-only"
+            />
+          </label>
+        </div>
+        <div>
+          <p className="font-medium">Profile photo</p>
+          <p className="text-sm text-muted-foreground">JPG, PNG or WebP, up to 2 MB.</p>
+        </div>
+      </section>
+
+      {/* Identity */}
       <section className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Profile
+          About you
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Username</Label>
-            <Input value={profile.username} disabled />
+            <Label htmlFor="fullName">Full name</Label>
+            <Input
+              id="fullName"
+              name="fullName"
+              defaultValue={profile.fullName ?? ""}
+              placeholder="Krish Yadav"
+            />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              name="username"
+              defaultValue={profile.username}
+              placeholder="benchpress_ben"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gender">Gender</Label>
+            <select
+              id="gender"
+              name="gender"
+              defaultValue={profile.gender ?? ""}
+              className={selectClass}
+            >
+              <option value="">Select…</option>
+              {GENDERS.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dob">
+              Date of birth{age != null ? ` · ${age} yrs` : ""}
+            </Label>
+            <Input
+              id="dob"
+              name="dob"
+              type="date"
+              value={dob}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setDob(e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Location & units */}
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Location & units
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="country">Country</Label>
             <select
@@ -120,6 +221,7 @@ export function SettingsForm({ profile }: { profile: Profile }) {
         </div>
       </section>
 
+      {/* Visibility */}
       <section className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Profile visibility
@@ -140,6 +242,7 @@ export function SettingsForm({ profile }: { profile: Profile }) {
         </div>
       </section>
 
+      {/* Big 4 */}
       <section className="space-y-4">
         <div className="flex items-baseline justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">

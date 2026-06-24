@@ -12,6 +12,8 @@ export async function searchUsers(q: string, excludeId?: string) {
     .select({
       id: profiles.id,
       username: profiles.username,
+      fullName: profiles.fullName,
+      avatarUrl: profiles.avatarUrl,
       country: profiles.country,
       visibility: profiles.visibility,
     })

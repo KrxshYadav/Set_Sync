@@ -1,7 +1,8 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+// Renamed from `middleware.ts` per Next.js 16's middleware -> proxy convention.
+export async function proxy(request: NextRequest) {
   return await updateSession(request);
 }
 

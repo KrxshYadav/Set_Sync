@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Search as SearchIcon, Lock } from "lucide-react";
-import { getMyProfile } from "../actions";
+import { getMyProfile } from "@/lib/get-profile";
 import { searchUsers } from "./queries";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/user-avatar";
 
 type SearchParams = Promise<{ q?: string }>;
 
@@ -51,12 +52,23 @@ export default async function SearchPage({
             href={`/u/${u.username}`}
             className="flex items-center justify-between rounded-lg border px-4 py-3 transition-colors hover:bg-secondary"
           >
-            <div>
-              <p className="font-medium">@{u.username}</p>
-              <p className="text-sm text-muted-foreground">{u.country}</p>
+            <div className="flex min-w-0 items-center gap-3">
+              <UserAvatar
+                url={u.avatarUrl}
+                name={u.fullName || u.username}
+                className="size-9"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-medium">
+                  {u.fullName ? u.fullName : `@${u.username}`}
+                </p>
+                <p className="truncate text-sm text-muted-foreground">
+                  {u.fullName ? `@${u.username} · ${u.country}` : u.country}
+                </p>
+              </div>
             </div>
             {u.visibility === "hidden" && (
-              <Lock className="size-4 text-muted-foreground" />
+              <Lock className="size-4 shrink-0 text-muted-foreground" />
             )}
           </Link>
         ))}

@@ -7,6 +7,7 @@ export type DaySet = {
   setIndex: number;
   reps: number;
   weightKg: number;
+  done: boolean;
 };
 
 export type DayEntry = {
@@ -53,6 +54,7 @@ export async function getDayEntries(
         setIndex: s.setIndex,
         reps: s.reps,
         weightKg: s.weightKg,
+        done: s.done,
       })),
   }));
 }

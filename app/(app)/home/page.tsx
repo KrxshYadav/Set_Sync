@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Dumbbell, Trophy, Settings, ArrowRight } from "lucide-react";
-import { getMyProfile } from "../actions";
+import { getMyProfile } from "@/lib/get-profile";
 import { getStandings } from "./queries";
 import { formatWeight } from "@/lib/units";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export default async function HomePage() {
       <div>
         <p className="text-sm text-muted-foreground">Welcome back,</p>
         <h1 className="text-3xl font-semibold tracking-tight">
-          @{profile.username}
+          {profile.fullName || `@${profile.username}`}
         </h1>
       </div>
 
@@ -39,7 +39,7 @@ export default async function HomePage() {
                   </p>
                 </div>
                 <div className="mt-3 flex gap-2 text-sm">
-                  <span className="rounded-md bg-lime-500/10 px-2 py-1 font-medium text-lime-700">
+                  <span className="rounded-md bg-lime-500/10 px-2 py-1 font-medium text-lime-700 dark:text-lime-400">
                     #{s.countryRank}{" "}
                     <span className="text-muted-foreground">
                       in {profile.country}
